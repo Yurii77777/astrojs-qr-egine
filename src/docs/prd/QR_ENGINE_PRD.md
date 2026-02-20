@@ -12,7 +12,7 @@
 
 ### 1.1 Навіщо свій рушій
 
-Популярні пакети (`qrcode`, `qr-code-styling`, `qrcode.react`) або не мають кастомізації зовнішнього вигляду, або делегують QR-математику чужій бібліотеці. Наша мета — повний контроль над кожним шаром: від Reed-Solomon до SVG-рендерингу.
+Популярні пакети (`qrcode`, `qr-code-styling`, `qrcode.react`) або не мають кастомізації зовнішнього вигляду, або делегують QR-математику чужій бібліотеці. Наша мета — повний контроль над кожним шаром: від Reed-Solomon до Canvas/SVG-рендерингу.
 
 ### 1.2 Що НЕ є метою
 
@@ -101,7 +101,7 @@ Input
   └─► [6] DataPlacer      — zigzag-розміщення даних
   └─► [7] MaskEvaluator   — перебір 8 масок + penalty-оцінка
   └─► [8] FormatWriter    — запис format/version information
-  └─► [9] Renderer        — SVG / Canvas / PNG
+  └─► [9] Renderer        — Canvas (live preview) / SVG (vector export) / PNG (raster export)
 ```
 
 Кожен крок — чиста функція: `(input) => output`. Жодного глобального стану.
@@ -125,13 +125,13 @@ src/
 │   ├── format.ts              # Format info & Version info (BCH)
 │   └── index.ts               # Публічний API: generateQR(text, options) → QRMatrix
 │
-├── renderer/                  # Рендерери (залежать від DOM / SVG)
-│   ├── svg.ts                 # SVG-рядок з кастомними формами
-│   ├── canvas.ts              # CanvasRenderingContext2D
-│   └── types.ts               # RenderOptions interface
+├── renderer/                  # Рендерери (залежать від DOM / Canvas / SVG)
+│   ├── canvas.ts              # Canvas2D — основний рендерер для live preview
+│   ├── svg.ts                 # SVG-рядок — генерується тільки для векторного експорту
+│   └── types.ts               # RenderOptions interface (спільний для обох рендерерів)
 │
 ├── components/                # React-компоненти
-│   ├── QRPreview.tsx          # Live-preview SVG
+│   ├── QRPreview.tsx          # Live-preview Canvas
 │   ├── QRControls/
 │   │   ├── SizeSelector.tsx
 │   │   ├── ECLevelSelector.tsx
@@ -200,8 +200,11 @@ export interface RenderOptions {
   pixelSize: number; // px per module
 }
 
-export function renderSVG(options: RenderOptions): string;
+// Canvas — основний рендерер (live preview у браузері)
 export function renderCanvas(options: RenderOptions, ctx: CanvasRenderingContext2D): void;
+
+// SVG — тільки для векторного експорту (генерує SVG-рядок)
+export function renderSVG(options: RenderOptions): string;
 ```
 
 ---
@@ -367,25 +370,54 @@ while col > 0:
 
 ---
 
-### Фаза 2 — SVG Рендерер
+### Фаза 2 — Рендерери (Canvas preview + SVG export)
 
-#### 2.1 Базовий рендерер (`renderer/svg.ts`)
+> **Архітектурне рішення:** Canvas — основний рендерер для live preview (швидкий, нативне малювання). SVG генерується лише при експорті (вектор, нескінченне масштабування). PNG експортується напряму з Canvas через `canvas.toBlob()`.
+
+#### 2.1 Canvas рендерер (`renderer/canvas.ts`) — live preview
 
 **Що робити:**
 
-- Прийняти `QRMatrix` + `RenderOptions`
-- Для кожного темного модуля намалювати форму в залежності від `moduleStyle.shape`:
+- Прийняти `QRMatrix` + `RenderOptions` + `CanvasRenderingContext2D`
+- Для кожного темного модуля малювати форму на Canvas:
+  - `square`: `ctx.fillRect()`
+  - `rounded`: `ctx.roundRect()` або ручний `ctx.arc()` + `ctx.lineTo()`
+  - `circle`: `ctx.arc()` + `ctx.fill()`
+  - `diamond`: `ctx.moveTo()` + `ctx.lineTo()` (4 точки ромба)
+- Finder паттерни — малювати окремо з `finderStyle` (ідентифікація по координатах, не по `isFunction`)
+- Градієнти: `ctx.createLinearGradient()` / `ctx.createRadialGradient()`
+- Quiet zone: offset через `ctx.translate(quietZone * pixelSize, quietZone * pixelSize)`
+- High-DPI: враховувати `devicePixelRatio` для чіткості на Retina
+
+**Складність:** середня. Canvas API простіший за SVG-генерацію рядків, але треба правильно працювати з DPI scaling.
+
+#### 2.2 SVG рендерер (`renderer/svg.ts`) — vector export
+
+**Що робити:**
+
+- Прийняти `QRMatrix` + `RenderOptions`, повернути SVG-рядок
+- Та сама логіка кастомізації (форми, кольори, finder стилі), але виражена через SVG елементи:
   - `square`: `<rect>`
   - `rounded`: `<rect rx="..." ry="...">` або `<path>` з rounded corners
   - `circle`: `<circle>`
   - `diamond`: `<polygon>` або `<path>`
-- Finder паттерни (`isFunction === true` + позиція у кутах) — малювати окремо з `finderStyle`
-- Gradient: `<defs><linearGradient>` або `<radialGradient>`, посилання через `fill="url(#g)"`
-- Quiet zone: offset всього контенту на `quietZone * moduleSize`
+- Gradient: `<defs><linearGradient>` або `<radialGradient>`, `fill="url(#g)"`
+- Quiet zone: offset через `viewBox` або `<g transform="translate()">`
+- `gradientUnits="userSpaceOnUse"` — щоб градієнт покривав весь код, а не окремий модуль
 
-**Складність:** середня. Головне — правильно ідентифікувати які модулі є частиною Finder (по координатах), щоб застосувати окремий стиль.
+**Складність:** середня. SVG рендерер повторює логіку Canvas, але генерує рядок замість імперативного малювання.
 
-#### 2.2 Logo Excavation
+#### 2.3 Спільна логіка (`renderer/shared.ts`)
+
+Обидва рендерери використовують однакову логіку:
+
+- Визначення Finder-модулів по координатах (`isFinderModule`)
+- Logo excavation (клонування матриці, очищення зони)
+- Обчислення розмірів з quiet zone
+
+Виділити в окремий файл, щоб Canvas і SVG не дублювали код.
+
+#### 2.4 Logo Excavation
 
 **Алгоритм excavate:**
 
@@ -407,7 +439,7 @@ while col > 0:
 ├────────────────┬────────────────────────┤
 │                │                        │
 │   Controls     │    QR Preview          │
-│   Panel        │    (живий SVG)         │
+│   Panel        │    (живий Canvas)      │
 │   (left)       │                        │
 │                │   [ Export SVG ]       │
 │                │   [ Export PNG ]       │
@@ -429,7 +461,7 @@ while col > 0:
 
 **`LogoUploader`** — drag-n-drop зона + слайдер розміру
 
-**`QRPreview`** — Live SVG, debounced 150ms, показує помилку якщо текст не вміщується в обраний size
+**`QRPreview`** — Live Canvas preview, debounced 150ms, показує помилку якщо текст не вміщується в обраний size
 
 **`ExportPanel`** — кнопки з іконками Download + Copy (Lucide: `Download`, `Copy`, `Check`)
 
@@ -453,24 +485,29 @@ interface QRState {
 #### 3.4 Performance
 
 - `useMemo` для `generateQR` (дорого — викликати тільки при зміні `text`, `sizeClass`, `ecLevel`)
-- `useMemo` для `renderSVG` (дорожче за матрицю, але дешевше за download)
+- Canvas re-render у `useEffect` при зміні стилю (Canvas API — імперативний, не декларативний)
 - Debounce 150ms на текстове поле
 
 ---
 
-### Фаза 4 — PNG Export та фінішні штрихи
+### Фаза 4 — Export та фінішні штрихи
 
 #### 4.1 PNG Export
 
-1. Взяти SVG рядок
-2. `new Blob([svgStr], { type: 'image/svg+xml' })`
-3. `URL.createObjectURL(blob)`
-4. Намалювати в `<canvas>` через `ctx.drawImage(img, ...)`
-5. `canvas.toBlob('image/png')` → завантажити
+Оскільки preview вже рендериться на Canvas, PNG export спрощується:
+
+1. Створити offscreen canvas з потрібним розміром (pixelSize × totalModules)
+2. Викликати `renderCanvas()` на offscreen canvas
+3. `canvas.toBlob('image/png')` → завантажити
 
 **Масштаб:** надати вибір розміру в px (256, 512, 1024, custom).
 
-#### 4.2 Перевірка сканованості
+#### 4.2 SVG Export
+
+1. Викликати `renderSVG()` з поточними `RenderOptions`
+2. Завантажити як `.svg` файл або скопіювати SVG-рядок у буфер обміну
+
+#### 4.3 Перевірка сканованості
 
 Додати візуальний інтикатор у Preview:
 
@@ -478,7 +515,7 @@ interface QRState {
 - Жовтий: payload близько до ліміту (>85% ємності)
 - Червоний: payload перевищує ліміт для обраного size
 
-#### 4.3 URL пресети
+#### 4.4 URL пресети
 
 Швидкі кнопки: "URL", "Текст", "vCard", "WiFi" — підставляють шаблон у поле вводу.
 
@@ -514,12 +551,13 @@ Finder-like pattern `0000 1011101` та `1011101 0000` — легко помил
 
 **Стратегія:** взяти відомий вирендерений QR і перевірити що penalty score співпадає.
 
-### 5.5 SVG Rendering кастомних форм Finder (складність: ★★★)
+### 5.5 Rendering кастомних форм Finder (складність: ★★★)
 
-Finder паттерн — 7×7 блок. Щоб замінити його на rounded/blob треба:
+Finder паттерн — 7×7 блок. Щоб замінити його на rounded/blob треба (однаково для Canvas і SVG):
 
-- Ідентифікувати пікселі як "частина Finder"
-- Замінити стандартні `<rect>` на кастомний `<path>`
+- Ідентифікувати модулі як "частина Finder" по координатах (не по `isFunction`)
+- Canvas: замінити стандартні `fillRect()` на кастомні `path` операції
+- SVG: замінити `<rect>` на кастомний `<path>`
 - Не торкатися функціональних модулів всередині (timing, alignment)
 
 ---
@@ -578,9 +616,9 @@ Vitest для unit-тестів engine/
 Тиждень 1: engine/constants/ + gf256 + rs (з unit-тестами)
 Тиждень 2: encoder + tables + analyzer + interleaver
 Тиждень 3: matrix + placer + masker + format (повний pipeline)
-Тиждень 4: SVG renderer (базовий квадратний)
-Тиждень 5: React UI + live preview + базовий export
-Тиждень 6: кастомні форми + градієнти + логотип + PNG export
+Тиждень 4: Canvas renderer (базовий квадратний) + SVG export renderer
+Тиждень 5: React UI + live Canvas preview + базовий export
+Тиждень 6: кастомні форми + градієнти + логотип + PNG export (з Canvas напряму)
 Тиждень 7: polish, edge cases, accessibility, responsive
 ```
 

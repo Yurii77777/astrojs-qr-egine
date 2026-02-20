@@ -475,7 +475,7 @@ raw << 12, ділимо, залишок XOR raw<<12 = 18-bit version string
 
 ---
 
-## renderer/svg.ts
+## renderer/shared.ts (спільна логіка)
 
 ### Finder паттерн — ідентифікація модулів за координатами
 
@@ -492,6 +492,78 @@ function isFinderModule(row: number, col: number, size: number): boolean {
 }
 ```
 
+### Excavate — клонувати матрицю перед модифікацією
+
+```ts
+const working = matrix.modules.map((row) => [...row]);
+// встановити false для модулів у зоні логотипу
+// передати working у renderer, не matrix.modules
+```
+
+---
+
+## renderer/canvas.ts (основний рендерер — live preview)
+
+> Canvas — основний рендерер для live preview у браузері. Швидший за SVG-генерацію, нативне малювання.
+
+### High-DPI рендеринг (Retina)
+
+```ts
+const dpr = window.devicePixelRatio || 1;
+canvas.width = targetPx * dpr;
+canvas.height = targetPx * dpr;
+canvas.style.width = targetPx + 'px';
+canvas.style.height = targetPx + 'px';
+ctx.scale(dpr, dpr);
+```
+
+Без DPI scaling — QR виглядатиме розмито на Retina-дисплеях.
+
+### Градієнт у Canvas
+
+```ts
+const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+grad.addColorStop(0, color1);
+grad.addColorStop(1, color2);
+ctx.fillStyle = grad;
+```
+
+Градієнт створювати один раз для всього коду (координати = повний розмір Canvas), а не для кожного модуля окремо. Інакше — той самий баг що й з SVG `objectBoundingBox`.
+
+### Quiet zone — offset через translate
+
+```ts
+ctx.translate(quietZone * pixelSize, quietZone * pixelSize);
+// малювати модулі від (0,0), translate зсуне їх автоматично
+```
+
+### Rounded rect — сумісність
+
+`ctx.roundRect()` підтримується у всіх сучасних браузерах (Chrome 99+, Firefox 112+, Safari 15.4+). Для надійності можна використати fallback через `ctx.arc()` + `ctx.lineTo()`.
+
+### PNG Export — напряму з Canvas
+
+Оскільки preview вже на Canvas, PNG export максимально простий:
+
+```ts
+// Створити offscreen canvas з потрібним розміром
+const offscreen = document.createElement('canvas');
+const totalPx = (matrixSize + 2 * quietZone) * pixelSize;
+offscreen.width = totalPx;
+offscreen.height = totalPx;
+const offCtx = offscreen.getContext('2d')!;
+renderCanvas(options, offCtx); // той самий рендерер
+offscreen.toBlob((blob) => download(blob!), 'image/png');
+```
+
+Не потрібен SVG→Canvas→PNG pipeline — Canvas вже є основним рендерером.
+
+---
+
+## renderer/svg.ts (тільки для векторного експорту)
+
+> SVG рендерер генерує SVG-рядок **тільки** при натисканні "Export SVG". Не використовується для live preview.
+
 ### Градієнт у SVG — прив'язка до userSpaceOnUse
 
 ```xml
@@ -500,14 +572,6 @@ function isFinderModule(row: number, col: number, size: number): boolean {
 
 З `objectBoundingBox` (дефолт) — градієнт прив'язується до кожного окремого модуля,
 а не до всього коду. Результат — не те що очікується.
-
-### Excavate — клонувати матрицю перед модифікацією
-
-```ts
-const working = matrix.modules.map((row) => [...row]);
-// встановити false для модулів у зоні логотипу
-// передати working у renderer, не matrix.modules
-```
 
 ### Quiet zone — offset через viewBox або transform
 
@@ -524,36 +588,9 @@ const working = matrix.modules.map((row) => [...row]);
 `moduleSize` завжди integer. Якщо потрібен дробовий — використовувати viewBox scaling,
 але реальні координати залишати цілочисельними.
 
----
+### Візуальна паритетність з Canvas
 
-## renderer/canvas.ts (PNG Export)
-
-### High-DPI рендеринг
-
-```ts
-const dpr = window.devicePixelRatio || 1;
-canvas.width = targetPx * dpr;
-canvas.height = targetPx * dpr;
-canvas.style.width = targetPx + 'px';
-canvas.style.height = targetPx + 'px';
-ctx.scale(dpr, dpr);
-```
-
-### SVG → Canvas → PNG pipeline
-
-```ts
-const blob = new Blob([svgString], { type: 'image/svg+xml' });
-const url = URL.createObjectURL(blob);
-const img = new Image();
-img.onload = () => {
-  ctx.drawImage(img, 0, 0, w, h);
-  canvas.toBlob((blob) => download(blob), 'image/png');
-  URL.revokeObjectURL(url); // обов'язково
-};
-img.src = url;
-```
-
-Не забути `URL.revokeObjectURL` — memory leak інакше.
+SVG export повинен виглядати **ідентично** Canvas preview. Спільну логіку (форми модулів, finder стилі, excavation) тримати в `shared.ts`, щоб обидва рендерери використовували однакові обчислення.
 
 ---
 
