@@ -4,7 +4,7 @@ Last updated: 2026-02-20
 
 ## Current Phase
 
-**Pre-development** — project scaffolding and tooling complete, no engine or UI code yet.
+**Phase 1 complete** — QR engine core implemented (full pipeline from text to QRMatrix).
 
 ## Installed Packages (actual versions)
 
@@ -49,6 +49,12 @@ Last updated: 2026-02-20
 
 button, card, input, label, slider, tabs, tooltip, badge
 
+## Architectural Decisions
+
+| #   | Decision                | Detail                                                               | Date       |
+| --- | ----------------------- | -------------------------------------------------------------------- | ---------- |
+| 1   | Rendering: Canvas + SVG | Canvas for live preview (fast), SVG generated only for vector export | 2026-02-20 |
+
 ## Deviations from PRD
 
 | #   | PRD says                           | Actual                                 | Reason                                |
@@ -72,12 +78,12 @@ button, card, input, label, slider, tabs, tooltip, badge
 - [x] Project documentation (PRD, CRITICAL_NOTES)
 - [x] Violet theme applied
 - [x] README created
+- [x] Phase 1: QR engine core (GF(256), Reed-Solomon, encoder, analyzer, interleaver, matrix, placer, masker, format)
 
 ## Next Up
 
-- [ ] Phase 1: QR engine core (GF(256), Reed-Solomon, encoder, analyzer, interleaver)
-- [ ] Phase 2: Matrix building, zigzag placer, mask evaluator, format info
-- [ ] Phase 3: SVG renderer with customizable shapes and styles
+- [ ] Phase 2: Canvas renderer (live preview) + SVG renderer (vector export)
+- [ ] Phase 3: React UI (controls, live preview, state management)
 - [ ] Phase 4: React UI (controls, live preview, state management)
 - [ ] Phase 5: Export (PNG, SVG, clipboard) and polish
 
@@ -86,4 +92,4 @@ button, card, input, label, slider, tabs, tooltip, badge
 - Dark/light theme toggle component not yet implemented
 - No favicon or meta tags configured
 - No CI/CD pipeline
-- `src/engine/` and `src/renderer/` directories are empty placeholders
+- `src/renderer/` directory is an empty placeholder
