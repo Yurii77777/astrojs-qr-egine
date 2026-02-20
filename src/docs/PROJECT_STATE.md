@@ -4,7 +4,7 @@ Last updated: 2026-02-20
 
 ## Current Phase
 
-**Phase 1 complete** — QR engine core implemented (full pipeline from text to QRMatrix).
+**Phase 2 complete** — Canvas + SVG renderers implemented. Visual testing буде при готовому UI (Phase 3).
 
 ## Installed Packages (actual versions)
 
@@ -79,17 +79,15 @@ button, card, input, label, slider, tabs, tooltip, badge
 - [x] Violet theme applied
 - [x] README created
 - [x] Phase 1: QR engine core (GF(256), Reed-Solomon, encoder, analyzer, interleaver, matrix, placer, masker, format)
+- [x] Phase 2: Canvas renderer (live preview) + SVG renderer (vector export) — візуальне тестування при готовому UI
 
 ## Next Up
 
-- [ ] Phase 2: Canvas renderer (live preview) + SVG renderer (vector export)
 - [ ] Phase 3: React UI (controls, live preview, state management)
-- [ ] Phase 4: React UI (controls, live preview, state management)
-- [ ] Phase 5: Export (PNG, SVG, clipboard) and polish
+- [ ] Phase 4: Export (PNG, SVG, clipboard) and polish
 
 ## Known TODOs / Tech Debt
 
 - Dark/light theme toggle component not yet implemented
 - No favicon or meta tags configured
 - No CI/CD pipeline
-- `src/renderer/` directory is an empty placeholder
