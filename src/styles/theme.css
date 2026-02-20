@@ -1,0 +1,42 @@
+/*
+ * QR Engine — Design Tokens
+ *
+ * Project-level Tailwind v4 theme overrides.
+ * Fonts, brand color palette, spacing, and breakpoints.
+ *
+ * Tailwind v4 default theme: node_modules/tailwindcss/theme.css
+ * Docs: https://tailwindcss.com/docs/theme
+ */
+
+@theme {
+  /* ── Fonts ─────────────────────────────────────────────────── */
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-mono:
+    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+
+  /* ── Brand Colors — Violet (oklch) ─────────────────────────── */
+  --color-violet-50: oklch(0.969 0.016 293.756);
+  --color-violet-100: oklch(0.943 0.029 294.588);
+  --color-violet-200: oklch(0.894 0.057 293.283);
+  --color-violet-300: oklch(0.811 0.111 293.571);
+  --color-violet-400: oklch(0.702 0.183 293.541);
+  --color-violet-500: oklch(0.606 0.25 292.717);
+  --color-violet-600: oklch(0.541 0.281 293.009);
+  --color-violet-700: oklch(0.491 0.27 292.581);
+  --color-violet-800: oklch(0.432 0.232 292.759);
+  --color-violet-900: oklch(0.38 0.189 293.745);
+  --color-violet-950: oklch(0.283 0.141 291.089);
+
+  /* ── Breakpoints ───────────────────────────────────────────── */
+  --breakpoint-sm: 40rem; /* 640px  */
+  --breakpoint-md: 48rem; /* 768px  */
+  --breakpoint-lg: 64rem; /* 1024px */
+  --breakpoint-xl: 80rem; /* 1280px */
+  --breakpoint-2xl: 96rem; /* 1536px */
+
+  /* ── Spacing base unit ─────────────────────────────────────── */
+  --spacing: 0.25rem; /* 4px — p-4 = 1rem, p-8 = 2rem, etc. */
+}
