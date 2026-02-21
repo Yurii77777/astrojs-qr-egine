@@ -87,3 +87,11 @@ lint → format → typecheck → test → build
 ```
 
 Deployment is handled automatically by the Vercel GitHub integration.
+
+### E1. Intro. Прописуємо базові інструкції та формуємо PRD / DFA
+
+[![E1. Intro. Прописуємо базові інструкції та формуємо PRD / DFA](https://img.youtube.com/vi/5O3YV7-Tt3o/0.jpg)](https://youtu.be/5O3YV7-Tt3o)
+
+Telegram: https://t.me/yu_dev01
+LinkedIn: https://www.linkedin.com/in/andriiko-yurii/
+GitHub: https://github.com/Yurii77777/astrojs-qr-egine
