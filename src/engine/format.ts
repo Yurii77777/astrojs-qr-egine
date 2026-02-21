@@ -87,7 +87,7 @@ function writeFormatBits(
   const positions2 = getFormatPositions2(size);
 
   for (let i = 0; i < 15; i++) {
-    const bit = ((formatBits >>> (14 - i)) & 1) === 1;
+    const bit = ((formatBits >>> i) & 1) === 1;
 
     const [r1, c1] = FORMAT_POSITIONS_1[i];
     modules[r1][c1] = bit;

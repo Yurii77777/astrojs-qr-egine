@@ -4,7 +4,7 @@ Last updated: 2026-02-21
 
 ## Current Phase
 
-**Phase 3 complete (UI)** — React UI побудований: DataInput (textarea + debounce), SizeSelector (S/M/L), ECLevelSelector (L/M/Q/H), QRPreview (canvas + High-DPI), QRApp (root component). Canvas рендер працює, але згенеровані QR-коди наразі невалідні — потрібен дебаг engine core.
+**Phase 3 complete (UI) + QR validity fix** — React UI + працюючий QR engine. Коди генеруються та скануються коректно (підтверджено e2e тестами через Playwright + @paulmillr/qr decoder).
 
 ## Installed Packages (actual versions)
 
@@ -40,6 +40,8 @@ Last updated: 2026-02-21
 | prettier-plugin-astro       | ^0.14.1 | Astro support         |
 | prettier-plugin-tailwindcss | ^0.7.2  | Class sorting         |
 | vitest                      | ^4.0.18 | Test runner           |
+| @playwright/test            | ^1.58.2 | E2E browser testing   |
+| @paulmillr/qr               | ^0.3.0  | QR decode (roundtrip) |
 | husky                       | ^9.1.7  | Git hooks             |
 | lint-staged                 | ^16.2.7 | Pre-commit runner     |
 | shadcn                      | ^3.8.5  | Component CLI         |
@@ -81,15 +83,15 @@ button, card, input, label, slider, tabs, tooltip, badge
 - [x] Phase 1: QR engine core (GF(256), Reed-Solomon, encoder, analyzer, interleaver, matrix, placer, masker, format)
 - [x] Phase 2: Canvas renderer (live preview) + SVG renderer (vector export) — візуальне тестування при готовому UI
 - [x] Phase 3: React UI — базовий рівень (DataInput, SizeSelector, ECLevelSelector, QRPreview, QRApp)
+- [x] Fix: format info bit order (MSB→LSB reversal in `format.ts:90`)
+- [x] E2E testing: Playwright + @paulmillr/qr decode roundtrip (4 test cases)
 
 ## Next Up
 
-- [ ] **Bug fix: QR-коди невалідні** — рендер працює, але згенеровані коди не скануються. Потрібен дебаг engine core.
 - [ ] Phase 4: Export (PNG, SVG, clipboard) and polish
 
 ## Known TODOs / Tech Debt
 
-- **QR-коди невалідні** — engine генерує матриці, canvas рендерить, але коди не скануються. Дебаг у окремій гілці.
 - Dark/light theme toggle component not yet implemented
 - No favicon or meta tags configured
 - No CI/CD pipeline
