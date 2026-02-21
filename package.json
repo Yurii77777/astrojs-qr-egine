@@ -13,6 +13,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
     "test:e2e": "playwright test",
     "prepare": "husky"
   },

@@ -4,7 +4,7 @@ Last updated: 2026-02-21
 
 ## Current Phase
 
-**Phase 3 complete (UI) + QR validity fix** — React UI + працюючий QR engine. Коди генеруються та скануються коректно (підтверджено e2e тестами через Playwright + @paulmillr/qr decoder).
+**Phase 4 complete (Export)** — PNG/SVG download + Copy SVG to clipboard. Pre-commit розширений: lint-staged + typecheck + vitest.
 
 ## Installed Packages (actual versions)
 
@@ -53,9 +53,11 @@ button, card, input, label, slider, tabs, tooltip, badge
 
 ## Architectural Decisions
 
-| #   | Decision                | Detail                                                               | Date       |
-| --- | ----------------------- | -------------------------------------------------------------------- | ---------- |
-| 1   | Rendering: Canvas + SVG | Canvas for live preview (fast), SVG generated only for vector export | 2026-02-20 |
+| #   | Decision                  | Detail                                                                            | Date       |
+| --- | ------------------------- | --------------------------------------------------------------------------------- | ---------- |
+| 1   | Rendering: Canvas + SVG   | Canvas for live preview (fast), SVG generated only for vector export              | 2026-02-20 |
+| 2   | Export logic in component | No separate hooks/useExport — helper functions at module level in ExportPanel.tsx | 2026-02-21 |
+| 3   | Pre-commit: full pipeline | lint-staged + tsc --noEmit + vitest run (not just lint-staged)                    | 2026-02-21 |
 
 ## Deviations from PRD
 
@@ -67,6 +69,8 @@ button, card, input, label, slider, tabs, tooltip, badge
 | 4   | ESLint version unspecified         | ESLint **v10** (flat config only)      | Latest stable, flat config enforced   |
 | 5   | Primary color unspecified          | **Violet** (oklch)                     | Design choice for brand identity      |
 | 6   | Dark/light mode unspecified        | Planned (`.dark` class strategy)       | Standard UX practice                  |
+| 7   | `hooks/useExport.ts` for export    | Helpers in `ExportPanel.tsx` directly  | Simpler, no separate hook needed      |
+| 8   | PNG custom px input                | Only presets (256, 512, 1024)          | Sufficient for v1, avoids complexity  |
 
 ## Completed
 
@@ -85,13 +89,20 @@ button, card, input, label, slider, tabs, tooltip, badge
 - [x] Phase 3: React UI — базовий рівень (DataInput, SizeSelector, ECLevelSelector, QRPreview, QRApp)
 - [x] Fix: format info bit order (MSB→LSB reversal in `format.ts:90`)
 - [x] E2E testing: Playwright + @paulmillr/qr decode roundtrip (4 test cases)
+- [x] Phase 4: Export — PNG download (256/512/1024 presets), SVG download, Copy SVG to clipboard
+- [x] Pre-commit expanded: lint-staged → typecheck (tsc --noEmit) → vitest run
+- [x] Fix: tables.ts import path (`../types` → `./types`)
+- [x] Fix: vitest.config.ts ESM compat (`__dirname` → `import.meta.dirname`)
 
 ## Next Up
 
-- [ ] Phase 4: Export (PNG, SVG, clipboard) and polish
+- [ ] Phase 4.3: Scanability indicator (green/yellow/red)
+- [ ] Phase 4.4: URL presets (URL, Text, vCard, WiFi templates)
+- [ ] Customization UI (color pickers, module shape selectors, logo upload)
 
 ## Known TODOs / Tech Debt
 
 - Dark/light theme toggle component not yet implemented
 - No favicon or meta tags configured
 - No CI/CD pipeline
+- Config files (vitest.config.ts, playwright.config.ts) excluded from tsconfig typecheck

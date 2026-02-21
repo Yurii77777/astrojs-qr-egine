@@ -1,4 +1,4 @@
-import type { ECLevel, Mode, SizeClass } from '../types';
+import type { ECLevel, Mode, SizeClass } from './types';
 
 export interface ECBlockGroup {
   count: number;

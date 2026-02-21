@@ -6,6 +6,7 @@ import { QRPreview } from './QRPreview';
 import { DataInput } from './QRControls/DataInput';
 import { SizeSelector } from './QRControls/SizeSelector';
 import { ECLevelSelector } from './QRControls/ECLevelSelector';
+import { ExportPanel } from './QRControls/ExportPanel';
 
 const DEFAULT_RENDER_OPTIONS: Omit<RenderOptions, 'matrix'> = {
   moduleStyle: {
@@ -45,6 +46,7 @@ export function QRApp() {
         <DataInput onTextChange={setText} />
         <SizeSelector value={sizeClass} onChange={setSizeClass} />
         <ECLevelSelector value={ecLevel} onChange={setEcLevel} />
+        <ExportPanel matrix={matrix} renderOptions={DEFAULT_RENDER_OPTIONS} />
       </div>
       <div className="flex items-start justify-center">
         <QRPreview matrix={matrix} renderOptions={DEFAULT_RENDER_OPTIONS} error={error} />
