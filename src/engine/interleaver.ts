@@ -17,14 +17,20 @@ function bytesToBits(bytes: number[], bits: Uint8Array, startIdx: number): numbe
   return idx;
 }
 
+function collectColumn(blocks: Uint8Array[], col: number): number[] {
+  const values: number[] = [];
+  for (const block of blocks) {
+    if (col < block.length) {
+      values.push(block[col]);
+    }
+  }
+  return values;
+}
+
 function interleaveColumns(blocks: Uint8Array[], maxLen: number): number[] {
   const result: number[] = [];
   for (let col = 0; col < maxLen; col++) {
-    for (const block of blocks) {
-      if (col < block.length) {
-        result.push(block[col]);
-      }
-    }
+    result.push(...collectColumn(blocks, col));
   }
   return result;
 }

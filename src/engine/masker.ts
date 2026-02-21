@@ -88,14 +88,20 @@ function isBlock2x2(modules: boolean[][], row: number, col: number): boolean {
   );
 }
 
+function countRowBlocks(modules: boolean[][], row: number, size: number): number {
+  let count = 0;
+  for (let col = 0; col < size - 1; col++) {
+    if (isBlock2x2(modules, row, col)) count++;
+  }
+  return count;
+}
+
 function penaltyRule2(modules: boolean[][]): number {
   const size = modules.length;
   let penalty = 0;
 
   for (let row = 0; row < size - 1; row++) {
-    for (let col = 0; col < size - 1; col++) {
-      if (isBlock2x2(modules, row, col)) penalty += 3;
-    }
+    penalty += countRowBlocks(modules, row, size) * 3;
   }
 
   return penalty;
