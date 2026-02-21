@@ -1,10 +1,10 @@
 # Project State
 
-Last updated: 2026-02-20
+Last updated: 2026-02-21
 
 ## Current Phase
 
-**Phase 2 complete** — Canvas + SVG renderers implemented. Visual testing буде при готовому UI (Phase 3).
+**Phase 3 complete (UI)** — React UI побудований: DataInput (textarea + debounce), SizeSelector (S/M/L), ECLevelSelector (L/M/Q/H), QRPreview (canvas + High-DPI), QRApp (root component). Canvas рендер працює, але згенеровані QR-коди наразі невалідні — потрібен дебаг engine core.
 
 ## Installed Packages (actual versions)
 
@@ -80,14 +80,16 @@ button, card, input, label, slider, tabs, tooltip, badge
 - [x] README created
 - [x] Phase 1: QR engine core (GF(256), Reed-Solomon, encoder, analyzer, interleaver, matrix, placer, masker, format)
 - [x] Phase 2: Canvas renderer (live preview) + SVG renderer (vector export) — візуальне тестування при готовому UI
+- [x] Phase 3: React UI — базовий рівень (DataInput, SizeSelector, ECLevelSelector, QRPreview, QRApp)
 
 ## Next Up
 
-- [ ] Phase 3: React UI (controls, live preview, state management)
+- [ ] **Bug fix: QR-коди невалідні** — рендер працює, але згенеровані коди не скануються. Потрібен дебаг engine core.
 - [ ] Phase 4: Export (PNG, SVG, clipboard) and polish
 
 ## Known TODOs / Tech Debt
 
+- **QR-коди невалідні** — engine генерує матриці, canvas рендерить, але коди не скануються. Дебаг у окремій гілці.
 - Dark/light theme toggle component not yet implemented
 - No favicon or meta tags configured
 - No CI/CD pipeline
