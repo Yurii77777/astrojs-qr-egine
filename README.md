@@ -44,6 +44,7 @@ The app will be available at `http://localhost:4321`.
 | `yarn lint:fix`     | Lint and auto-fix        |
 | `yarn format`       | Format with Prettier     |
 | `yarn format:check` | Check formatting         |
+| `yarn typecheck`    | TypeScript type checking |
 
 ## Project Structure
 
@@ -76,3 +77,13 @@ src/
 3. **SVG renderer** — module shapes, finder styles, gradients, logo excavation
 4. **React UI** — controls panel, live preview, state management
 5. **Export & polish** — PNG export, capacity indicator, presets, accessibility
+
+## CI/CD
+
+GitHub Actions runs on every push and PR to `main`:
+
+```
+lint → format → typecheck → test → build
+```
+
+Deployment is handled automatically by the Vercel GitHub integration.
